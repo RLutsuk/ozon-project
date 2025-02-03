@@ -25,17 +25,17 @@ func New(postRepository postrep.RepositoryI) UseCaseI {
 }
 
 func (uc *useCase) CreatePost(ctx context.Context, inputPost model.CreatePostInput) (*model.Post, error) {
-	var newpost *model.Post
+	var newpost model.Post
 	newpost.Title = inputPost.Title
 	newpost.Allowcomments = inputPost.AllowComments
 	newpost.Body = inputPost.Body
 	newpost.User.ID = inputPost.UserID
-	err := uc.postRepository.CreatePost(ctx, newpost)
+	err := uc.postRepository.CreatePost(ctx, &newpost)
 	if err == nil {
 		logrus.Info("Post succesfully created")
 	}
-	newpost, err = uc.postRepository.GetPostByID(ctx, newpost.ID)
-	return newpost, err
+	post, err := uc.postRepository.GetPostByID(ctx, newpost.ID)
+	return post, err
 }
 
 func (uc *useCase) GetPost(ctx context.Context, id string) (*model.Post, error) {

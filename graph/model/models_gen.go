@@ -2,16 +2,6 @@
 
 package model
 
-type Comment struct {
-	ID      string     `json:"id"`
-	Body    string     `json:"body"`
-	User    *User      `json:"user"`
-	Post    *Post      `json:"post"`
-	Created string     `json:"created"`
-	Parent  *Comment   `json:"parent,omitempty"`
-	Replies []*Comment `json:"replies,omitempty"`
-}
-
 type CreateCommentInput struct {
 	Body     string  `json:"body"`
 	UserID   string  `json:"userId"`
@@ -29,39 +19,5 @@ type CreatePostInput struct {
 type Mutation struct {
 }
 
-type Post struct {
-	ID            string     `json:"id"`
-	Title         string     `json:"title"`
-	Body          string     `json:"body"`
-	User          *User      `json:"user"`
-	Created       string     `json:"created"`
-	Allowcomments bool       `json:"allowcomments"`
-	Comments      []*Comment `json:"comments,omitempty"`
-}
-
 type Query struct {
-}
-
-type UpdateCommentInput struct {
-	ID     string `json:"id"`
-	Body   string `json:"body"`
-	PostID string `json:"postId"`
-}
-
-type UpdatePostInput struct {
-	ID            string  `json:"id"`
-	Title         *string `json:"title,omitempty"`
-	Body          *string `json:"body,omitempty"`
-	AllowComments *bool   `json:"allowComments,omitempty"`
-}
-
-type User struct {
-	ID        string     `json:"id"`
-	Username  string     `json:"username"`
-	Email     string     `json:"email"`
-	Firstname string     `json:"firstname"`
-	Lastname  string     `json:"lastname"`
-	Created   string     `json:"created"`
-	Posts     []*Post    `json:"posts,omitempty"`
-	Comments  []*Comment `json:"comments,omitempty"`
 }

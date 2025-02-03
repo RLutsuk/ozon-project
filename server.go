@@ -40,6 +40,16 @@ func main() {
 	postgresPort := os.Getenv("POSTGRES_PORT")
 	postgresDB := os.Getenv("POSTGRES_DATABASE")
 
+	if serverPort == "" || postgresUser == "" || postgresPassword == "" || postgresHost == "" || postgresPort == "" || postgresDB == "" {
+		postgresHost = "localhost"
+		postgresUser = "db_pg"
+		postgresPassword = "db_postgres"
+		postgresDB = "db_post"
+		postgresPort = "5432"
+		serverPort = "8080"
+		storageType = "postgres"
+	}
+
 	var postRep postrep.RepositoryI
 	var commentRep commentrep.RepositoryI
 	switch storageType {

@@ -4,9 +4,7 @@ type User {
   email: String!
   firstname: String!
   lastname: String!
-  created: Timestamp!
-  posts: [Post]
-  comments: [Comment]
+  created: Time!
 }
 
 type Post { 
@@ -14,7 +12,7 @@ type Post {
   title: String!
   body: String! 
   user: User!
-  created: Timestamp!
+  created: Time!
   allowcomments: Boolean!
   comments: [Comment]
 } 
@@ -24,16 +22,14 @@ type Comment {
   body: String! 
   user: User!
   post: Post!
-  created: Timestamp!
+  created: Time!
   parent: Comment
   replies: [Comment]
 }
 
 type Query {  
-  post(id: ID!): Post
-  posts: [Post]
-  #comment(id: ID!): Comment
-  #comments(postId: ID!): [Comment]!
+  getpost(id: ID!): Post
+  getposts: [Post]
 }
 
 input CreatePostInput {
@@ -43,13 +39,6 @@ input CreatePostInput {
   allowComments: Boolean!
 }
 
-input UpdatePostInput {
-  id: ID!
-  title: String
-  body: String
-  allowComments: Boolean
-}
-
 input CreateCommentInput {
   body: String!
   userId: ID!
@@ -57,20 +46,9 @@ input CreateCommentInput {
   parentId: ID
 }
 
-input UpdateCommentInput {
-  id: ID!
-  body: String!
-  postId: ID!
-}
-
-
 type Mutation {
   createPost(input: CreatePostInput!): Post!
   createComment(input: CreateCommentInput!): Comment!
-  updatePost(input: UpdatePostInput!): Post!
-  updateComment(input: UpdatePostInput!): Comment!
-  deletePost(id: ID!): Boolean!
-  deleteComment(id: ID!): Boolean!
 }
 
-scalar Timestamp
+scalar Time

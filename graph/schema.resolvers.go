@@ -7,9 +7,20 @@ package graph
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/RLutsuk/ozon-project/graph/model"
 )
+
+// User is the resolver for the user field.
+func (r *commentResolver) User(ctx context.Context, obj *model.Comment) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: User - user"))
+}
+
+// Post is the resolver for the post field.
+func (r *commentResolver) Post(ctx context.Context, obj *model.Comment) (*model.Post, error) {
+	panic(fmt.Errorf("not implemented: Post - post"))
+}
 
 // CreatePost is the resolver for the createPost field.
 func (r *mutationResolver) CreatePost(ctx context.Context, input model.CreatePostInput) (*model.Post, error) {
@@ -23,29 +34,14 @@ func (r *mutationResolver) CreateComment(ctx context.Context, input model.Create
 	panic(fmt.Errorf("not implemented: CreateComment - createComment"))
 }
 
-// UpdatePost is the resolver for the updatePost field.
-func (r *mutationResolver) UpdatePost(ctx context.Context, input model.UpdatePostInput) (*model.Post, error) {
-	panic(fmt.Errorf("not implemented: UpdatePost - updatePost"))
+// User is the resolver for the user field.
+func (r *postResolver) User(ctx context.Context, obj *model.Post) (*model.User, error) {
+	// panic(fmt.Errorf("not implemented: User - user"))
+	return &model.User{ID: "123412", Username: "username", Firstname: "firstname", Lastname: "lastname", Created: time.Now()}, nil
 }
 
-// UpdateComment is the resolver for the updateComment field.
-func (r *mutationResolver) UpdateComment(ctx context.Context, input model.UpdatePostInput) (*model.Comment, error) {
-	panic(fmt.Errorf("not implemented: UpdateComment - updateComment"))
-}
-
-// DeletePost is the resolver for the deletePost field.
-func (r *mutationResolver) DeletePost(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeletePost - deletePost"))
-}
-
-// DeleteComment is the resolver for the deleteComment field.
-func (r *mutationResolver) DeleteComment(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteComment - deleteComment"))
-}
-
-// Post is the resolver for the post field.
-func (r *queryResolver) Post(ctx context.Context, id string) (*model.Post, error) {
-	// panic(fmt.Errorf("not implemented: Post - post"))
+// Getpost is the resolver for the getpost field.
+func (r *queryResolver) Getpost(ctx context.Context, id string) (*model.Post, error) {
 	post, err := r.PostResolver.GetPostResolver(ctx, id)
 	if err != nil {
 		panic(fmt.Errorf("not implemented: GetPost"))
@@ -53,8 +49,8 @@ func (r *queryResolver) Post(ctx context.Context, id string) (*model.Post, error
 	return post, nil
 }
 
-// Posts is the resolver for the posts field.
-func (r *queryResolver) Posts(ctx context.Context) ([]*model.Post, error) {
+// Getposts is the resolver for the getposts field.
+func (r *queryResolver) Getposts(ctx context.Context) ([]*model.Post, error) {
 	posts, err := r.PostResolver.GetAllPostsResolver(ctx)
 	if err != nil {
 		panic(fmt.Errorf("not implemented: GetPost"))
@@ -62,11 +58,19 @@ func (r *queryResolver) Posts(ctx context.Context) ([]*model.Post, error) {
 	return posts, nil
 }
 
+// Comment returns CommentResolver implementation.
+func (r *Resolver) Comment() CommentResolver { return &commentResolver{r} }
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
+// Post returns PostResolver implementation.
+func (r *Resolver) Post() PostResolver { return &postResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+type commentResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
+type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
