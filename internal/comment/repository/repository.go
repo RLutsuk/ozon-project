@@ -7,6 +7,7 @@ import (
 )
 
 type RepositoryI interface {
-	CreateComment(ctx context.Context, comment *model.Comment) error
-	GetComments(ctx context.Context, postId string, limit, offset int) ([]*model.Comment, error)
+	CreateComment(ctx context.Context, comment *model.Comment) (*model.Comment, error)
+	GetComments(ctx context.Context, postId string, limit, offset int) ([]*model.Comment, []*model.Comment, error)
+	GetCommentByiD(ctx context.Context, postId string) (*model.Comment, error)
 }

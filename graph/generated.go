@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -53,6 +54,7 @@ type ComplexityRoot struct {
 		Body    func(childComplexity int) int
 		Created func(childComplexity int) int
 		ID      func(childComplexity int) int
+		Level   func(childComplexity int) int
 		Parent  func(childComplexity int) int
 		Post    func(childComplexity int) int
 		Replies func(childComplexity int) int
@@ -75,7 +77,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Getpost  func(childComplexity int, id string) int
+		Getpost  func(childComplexity int, id string, limit *int32, offset *int32) int
 		Getposts func(childComplexity int) int
 	}
 
@@ -91,7 +93,8 @@ type ComplexityRoot struct {
 
 type CommentResolver interface {
 	User(ctx context.Context, obj *model.Comment) (*model.User, error)
-	Post(ctx context.Context, obj *model.Comment) (*model.Post, error)
+
+	Level(ctx context.Context, obj *model.Comment) (*int32, error)
 }
 type MutationResolver interface {
 	CreatePost(ctx context.Context, input model.CreatePostInput) (*model.Post, error)
@@ -101,7 +104,7 @@ type PostResolver interface {
 	User(ctx context.Context, obj *model.Post) (*model.User, error)
 }
 type QueryResolver interface {
-	Getpost(ctx context.Context, id string) (*model.Post, error)
+	Getpost(ctx context.Context, id string, limit *int32, offset *int32) (*model.Post, error)
 	Getposts(ctx context.Context) ([]*model.Post, error)
 }
 
@@ -144,6 +147,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Comment.ID(childComplexity), true
+
+	case "Comment.level":
+		if e.complexity.Comment.Level == nil {
+			break
+		}
+
+		return e.complexity.Comment.Level(childComplexity), true
 
 	case "Comment.parent":
 		if e.complexity.Comment.Parent == nil {
@@ -256,7 +266,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Getpost(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.Getpost(childComplexity, args["id"].(string), args["limit"].(*int32), args["offset"].(*int32)), true
 
 	case "Query.getposts":
 		if e.complexity.Query.Getposts == nil {
@@ -510,6 +520,16 @@ func (ec *executionContext) field_Query_getpost_args(ctx context.Context, rawArg
 		return nil, err
 	}
 	args["id"] = arg0
+	arg1, err := ec.field_Query_getpost_argsLimit(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
+	arg2, err := ec.field_Query_getpost_argsOffset(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["offset"] = arg2
 	return args, nil
 }
 func (ec *executionContext) field_Query_getpost_argsID(
@@ -522,6 +542,32 @@ func (ec *executionContext) field_Query_getpost_argsID(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getpost_argsLimit(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int32, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
+		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
+	}
+
+	var zeroVal *int32
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getpost_argsOffset(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int32, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+	if tmp, ok := rawArgs["offset"]; ok {
+		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
+	}
+
+	var zeroVal *int32
 	return zeroVal, nil
 }
 
@@ -785,7 +831,7 @@ func (ec *executionContext) _Comment_post(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Comment().Post(rctx, obj)
+		return obj.Post, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -806,8 +852,8 @@ func (ec *executionContext) fieldContext_Comment_post(_ context.Context, field g
 	fc = &graphql.FieldContext{
 		Object:     "Comment",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -857,9 +903,9 @@ func (ec *executionContext) _Comment_created(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNTimestamp2string(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Comment_created(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -869,7 +915,7 @@ func (ec *executionContext) fieldContext_Comment_created(_ context.Context, fiel
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Timestamp does not have child fields")
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -923,10 +969,53 @@ func (ec *executionContext) fieldContext_Comment_parent(_ context.Context, field
 				return ec.fieldContext_Comment_created(ctx, field)
 			case "parent":
 				return ec.fieldContext_Comment_parent(ctx, field)
+			case "level":
+				return ec.fieldContext_Comment_level(ctx, field)
 			case "replies":
 				return ec.fieldContext_Comment_replies(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Comment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Comment_level(ctx context.Context, field graphql.CollectedField, obj *model.Comment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Comment_level(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Comment().Level(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int32)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Comment_level(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Comment",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -980,6 +1069,8 @@ func (ec *executionContext) fieldContext_Comment_replies(_ context.Context, fiel
 				return ec.fieldContext_Comment_created(ctx, field)
 			case "parent":
 				return ec.fieldContext_Comment_parent(ctx, field)
+			case "level":
+				return ec.fieldContext_Comment_level(ctx, field)
 			case "replies":
 				return ec.fieldContext_Comment_replies(ctx, field)
 			}
@@ -1111,6 +1202,8 @@ func (ec *executionContext) fieldContext_Mutation_createComment(ctx context.Cont
 				return ec.fieldContext_Comment_created(ctx, field)
 			case "parent":
 				return ec.fieldContext_Comment_parent(ctx, field)
+			case "level":
+				return ec.fieldContext_Comment_level(ctx, field)
 			case "replies":
 				return ec.fieldContext_Comment_replies(ctx, field)
 			}
@@ -1347,9 +1440,9 @@ func (ec *executionContext) _Post_created(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNTimestamp2string(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Post_created(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1359,7 +1452,7 @@ func (ec *executionContext) fieldContext_Post_created(_ context.Context, field g
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Timestamp does not have child fields")
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1457,6 +1550,8 @@ func (ec *executionContext) fieldContext_Post_comments(_ context.Context, field 
 				return ec.fieldContext_Comment_created(ctx, field)
 			case "parent":
 				return ec.fieldContext_Comment_parent(ctx, field)
+			case "level":
+				return ec.fieldContext_Comment_level(ctx, field)
 			case "replies":
 				return ec.fieldContext_Comment_replies(ctx, field)
 			}
@@ -1480,7 +1575,7 @@ func (ec *executionContext) _Query_getpost(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Getpost(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Query().Getpost(rctx, fc.Args["id"].(string), fc.Args["limit"].(*int32), fc.Args["offset"].(*int32))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1968,9 +2063,9 @@ func (ec *executionContext) _User_created(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNTimestamp2string(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_created(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1980,7 +2075,7 @@ func (ec *executionContext) fieldContext_User_created(_ context.Context, field g
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Timestamp does not have child fields")
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3974,7 +4069,7 @@ func (ec *executionContext) unmarshalInputCreateCommentInput(ctx context.Context
 			it.PostID = data
 		case "parentId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parentId"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			data, err := ec.unmarshalOID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4099,18 +4194,27 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "post":
+			out.Values[i] = ec._Comment_post(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "created":
+			out.Values[i] = ec._Comment_created(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "parent":
+			out.Values[i] = ec._Comment_parent(ctx, field, obj)
+		case "level":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Comment_post(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
+				res = ec._Comment_level(ctx, field, obj)
 				return res
 			}
 
@@ -4134,13 +4238,6 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "created":
-			out.Values[i] = ec._Comment_created(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "parent":
-			out.Values[i] = ec._Comment_parent(ctx, field, obj)
 		case "replies":
 			out.Values[i] = ec._Comment_replies(ctx, field, obj)
 		default:
@@ -4889,13 +4986,13 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNTimestamp2string(ctx context.Context, v any) (string, error) {
-	res, err := graphql.UnmarshalString(v)
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v any) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTimestamp2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := graphql.MarshalTime(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5245,19 +5342,29 @@ func (ec *executionContext) marshalOComment2ᚖgithubᚗcomᚋRLutsukᚋozonᚑp
 	return ec._Comment(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v any) (*string, error) {
+func (ec *executionContext) unmarshalOID2string(ctx context.Context, v any) (string, error) {
+	res, err := graphql.UnmarshalID(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalID(v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := graphql.UnmarshalID(v)
+	res, err := graphql.UnmarshalInt32(v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.SelectionSet, v *int32) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	res := graphql.MarshalID(*v)
+	res := graphql.MarshalInt32(*v)
 	return res
 }
 

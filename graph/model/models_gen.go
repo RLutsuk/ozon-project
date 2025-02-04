@@ -2,13 +2,6 @@
 
 package model
 
-type CreateCommentInput struct {
-	Body     string  `json:"body"`
-	UserID   string  `json:"userId"`
-	PostID   string  `json:"postId"`
-	ParentID *string `json:"parentId,omitempty"`
-}
-
 type CreatePostInput struct {
 	Title         string `json:"title"`
 	Body          string `json:"body"`

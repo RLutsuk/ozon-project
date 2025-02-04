@@ -24,11 +24,12 @@ type Comment {
   post: Post!
   created: Time!
   parent: Comment
+  level: Int
   replies: [Comment]
 }
 
 type Query {  
-  getpost(id: ID!): Post
+  getpost(id: ID!, limit: Int, offset: Int): Post
   getposts: [Post]
 }
 

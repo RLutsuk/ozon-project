@@ -7,7 +7,7 @@ import (
 )
 
 type RepositoryI interface {
-	CreatePost(ctx context.Context, post *model.Post) error
+	CreatePost(ctx context.Context, post *model.Post) (*model.Post, error)
 	GetPostByID(ctx context.Context, id string) (*model.Post, error)
 	GetAllPosts(ctx context.Context) ([]*model.Post, error)
 }

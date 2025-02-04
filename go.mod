@@ -7,7 +7,6 @@ toolchain go1.22.11
 require (
 	github.com/99designs/gqlgen v0.17.64
 	github.com/pkg/errors v0.9.1
-	github.com/ridhamtarpara/go-graphql-demo v0.0.0-20200115120253-bbba33555e19
 	github.com/sirupsen/logrus v1.9.3
 	github.com/vektah/gqlparser/v2 v2.5.22
 	gorm.io/driver/postgres v1.5.11
@@ -26,7 +25,6 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/lib/pq v1.10.9 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect

@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/RLutsuk/ozon-project/graph/model"
+	"github.com/google/uuid"
 )
 
 type inmemoryStore struct {
@@ -19,11 +21,13 @@ func New() *inmemoryStore {
 	}
 }
 
-func (r *inmemoryStore) CreatePost(ctx context.Context, post *model.Post) error {
+func (r *inmemoryStore) CreatePost(ctx context.Context, post *model.Post) (*model.Post, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	post.Created = time.Now()
+	post.ID = uuid.New().String()
 	r.posts[post.ID] = post
-	return nil
+	return post, nil
 }
 
 func (r *inmemoryStore) GetPostByID(ctx context.Context, id string) (*model.Post, error) {

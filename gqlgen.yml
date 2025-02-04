@@ -161,7 +161,3 @@ models:
     fields:
       user:
         resolver: true
-      post:
-        resolver: true
-  Time:
-    model: time.Time

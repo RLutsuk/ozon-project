@@ -7,7 +7,6 @@ package graph
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/RLutsuk/ozon-project/graph/model"
 )
@@ -17,32 +16,30 @@ func (r *commentResolver) User(ctx context.Context, obj *model.Comment) (*model.
 	panic(fmt.Errorf("not implemented: User - user"))
 }
 
-// Post is the resolver for the post field.
-func (r *commentResolver) Post(ctx context.Context, obj *model.Comment) (*model.Post, error) {
-	panic(fmt.Errorf("not implemented: Post - post"))
+// Level is the resolver for the level field.
+func (r *commentResolver) Level(ctx context.Context, obj *model.Comment) (*int32, error) {
+	level := int32(obj.Level)
+	return &level, nil
 }
 
 // CreatePost is the resolver for the createPost field.
 func (r *mutationResolver) CreatePost(ctx context.Context, input model.CreatePostInput) (*model.Post, error) {
-	// panic(fmt.Errorf("not implemented: CreatePost - createPost"))
-	post, _ := r.PostResolver.CreatePostResolver(ctx, input)
-	return post, nil
+	return r.PostResolver.CreatePostResolver(ctx, input)
 }
 
 // CreateComment is the resolver for the createComment field.
 func (r *mutationResolver) CreateComment(ctx context.Context, input model.CreateCommentInput) (*model.Comment, error) {
-	panic(fmt.Errorf("not implemented: CreateComment - createComment"))
+	return r.CommentResolver.CreateCommentResolver(ctx, input)
 }
 
 // User is the resolver for the user field.
 func (r *postResolver) User(ctx context.Context, obj *model.Post) (*model.User, error) {
-	// panic(fmt.Errorf("not implemented: User - user"))
-	return &model.User{ID: "123412", Username: "username", Firstname: "firstname", Lastname: "lastname", Created: time.Now()}, nil
+	return r.PostResolver.GetUserByID(ctx, obj)
 }
 
 // Getpost is the resolver for the getpost field.
-func (r *queryResolver) Getpost(ctx context.Context, id string) (*model.Post, error) {
-	post, err := r.PostResolver.GetPostResolver(ctx, id)
+func (r *queryResolver) Getpost(ctx context.Context, id string, limit *int32, offset *int32) (*model.Post, error) {
+	post, err := r.PostResolver.GetPostResolver(ctx, id, limit, offset)
 	if err != nil {
 		panic(fmt.Errorf("not implemented: GetPost"))
 	}

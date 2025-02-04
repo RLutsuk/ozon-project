@@ -22,6 +22,9 @@ import (
 	postrep "github.com/RLutsuk/ozon-project/internal/post/repository"
 	postresolver "github.com/RLutsuk/ozon-project/internal/post/resolver"
 	postusecase "github.com/RLutsuk/ozon-project/internal/post/usecase"
+	userrepinmem "github.com/RLutsuk/ozon-project/internal/user/infrastructure/inmemoryrep"
+	userrepdb "github.com/RLutsuk/ozon-project/internal/user/infrastructure/postgresrep"
+	userrep "github.com/RLutsuk/ozon-project/internal/user/repository"
 	"github.com/vektah/gqlparser/v2/ast"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -52,6 +55,7 @@ func main() {
 
 	var postRep postrep.RepositoryI
 	var commentRep commentrep.RepositoryI
+	var userRep userrep.RepositoryI
 	switch storageType {
 	case "postgres":
 		config := fmt.Sprintf("host=%s user=%s password=%s database=%s port=%s", postgresHost, postgresUser, postgresPassword, postgresDB, postgresPort)
@@ -65,13 +69,15 @@ func main() {
 		sqlDB.SetMaxOpenConns(100)
 		postRep = postrepdb.New(db)
 		commentRep = commentrepdb.New(db)
+		userRep = userrepdb.New(db)
 	default:
 		postRep = postrepinmem.New()
 		commentRep = commentrepinmem.New()
+		userRep = userrepinmem.New()
 		fmt.Println("Using In-Memory storage")
 	}
 
-	postUC := postusecase.New(postRep)
+	postUC := postusecase.New(postRep, userRep, commentRep)
 	commentUC := commentusecase.New(commentRep)
 	postResolver := postresolver.New(postUC)
 	commentResolver := commentresolver.New(commentUC)
