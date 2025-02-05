@@ -25,6 +25,7 @@ import (
 	userrepinmem "github.com/RLutsuk/ozon-project/internal/user/infrastructure/inmemoryrep"
 	userrepdb "github.com/RLutsuk/ozon-project/internal/user/infrastructure/postgresrep"
 	userrep "github.com/RLutsuk/ozon-project/internal/user/repository"
+	"github.com/sirupsen/logrus"
 	"github.com/vektah/gqlparser/v2/ast"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -70,15 +71,16 @@ func main() {
 		postRep = postrepdb.New(db)
 		commentRep = commentrepdb.New(db)
 		userRep = userrepdb.New(db)
+		logrus.Info("Using PostgreSQL DB")
 	default:
 		postRep = postrepinmem.New()
 		commentRep = commentrepinmem.New()
 		userRep = userrepinmem.New()
-		fmt.Println("Using In-Memory storage")
+		logrus.Info("Using In-Memory storage")
 	}
 
 	postUC := postusecase.New(postRep, userRep, commentRep)
-	commentUC := commentusecase.New(commentRep)
+	commentUC := commentusecase.New(commentRep, userRep)
 	postResolver := postresolver.New(postUC)
 	commentResolver := commentresolver.New(commentUC)
 
@@ -106,6 +108,6 @@ func main() {
 	if serverPort == "" {
 		serverPort = defaultPort
 	}
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", serverPort)
+	logrus.Info("Server has started on host: http://localhost:8080/ for GraphQL playground")
 	log.Fatal(http.ListenAndServe(":"+serverPort, nil))
 }

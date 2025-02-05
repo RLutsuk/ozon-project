@@ -15,6 +15,10 @@ func (r *CommentResolver) CreateCommentResolver(ctx context.Context, input model
 	return r.commentUC.CreateComment(ctx, input)
 }
 
+func (r *CommentResolver) GetUserByID(ctx context.Context, obj *model.Comment) (*model.User, error) {
+	return r.commentUC.GetUserByID(ctx, obj)
+}
+
 // func (r *CommentResolver) GetCommentResolver(ctx context.Context, postId string, limit, offset int) ([]*model.Comment, error) {
 // 	return r.commentUC.GetComments(ctx, postId, limit, offset)
 // }

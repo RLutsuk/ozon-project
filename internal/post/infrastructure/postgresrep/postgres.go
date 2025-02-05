@@ -21,7 +21,7 @@ func New(db *gorm.DB) *dataBase {
 func (dbPost *dataBase) CreatePost(ctx context.Context, post *model.Post) (*model.Post, error) {
 	tx := dbPost.db.Table("posts").Select("title", "body", "user_id", "allow_comments").Create(post)
 	if tx.Error != nil {
-		return post, errors.Wrap(tx.Error, "database error (table posts)")
+		return post, errors.Wrap(tx.Error, "database error: internal (method CreatePost, table posts)")
 	}
 	return post, nil
 }
@@ -30,7 +30,10 @@ func (dbPost *dataBase) GetPostByID(ctx context.Context, id string) (*model.Post
 	var post model.Post
 	tx := dbPost.db.Table("posts").Where("id = ?", id).Take(&post)
 	if tx.Error != nil {
-		return &post, errors.Wrap(tx.Error, "database error (table posts)")
+		return nil, errors.Wrap(tx.Error, "database error: internal (method GetPostByID, table posts)")
+	}
+	if tx.RowsAffected == 0 {
+		return nil, errors.Wrap(model.ErrPostNotFound, "database error: post not found (method GetPostByID, table posts)")
 	}
 	return &post, nil
 }
@@ -40,7 +43,10 @@ func (dbPost *dataBase) GetAllPosts(ctx context.Context) ([]*model.Post, error) 
 	tx := dbPost.db.Table("posts")
 	err := tx.Find(&posts).Error
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(tx.Error, "database error: internal (method GetAllPosts, table posts)")
+	}
+	if tx.RowsAffected == 0 {
+		return nil, errors.Wrap(model.ErrPostsDontExist, "database error: post don't exist (method GetAllPosts, table posts)")
 	}
 	return posts, nil
 }

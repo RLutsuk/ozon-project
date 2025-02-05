@@ -2,13 +2,13 @@ package inmemoryrep
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"sync"
 	"time"
 
 	"github.com/RLutsuk/ozon-project/graph/model"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 type inmemoryStore struct {
@@ -78,10 +78,13 @@ func (r *inmemoryStore) GetComments(ctx context.Context, postId string, limit, o
 	sort.Slice(parentcomments, func(i, j int) bool {
 		return parentcomments[i].Created.Before(parentcomments[j].Created)
 	})
+	// if len(parentcomments) == 0 {
+	// 	return nil, nil, errors.Wrap(model.ErrCommentsDontExist, "database error (method GetComments, table comments)")
+	// }
 	start := offset
 	end := offset + limit
 	if start > len(parentcomments) {
-		return nil, nil, fmt.Errorf("offset exceeds number of comments")
+		return nil, nil, errors.Wrap(model.ErrCommentOffset, "database error: comments don't exist (method GetComments, table comments)")
 	}
 	if end > len(parentcomments) {
 		end = len(parentcomments)
@@ -91,6 +94,9 @@ func (r *inmemoryStore) GetComments(ctx context.Context, postId string, limit, o
 }
 
 func (r *inmemoryStore) GetCommentByiD(ctx context.Context, commentID string) (*model.Comment, error) {
-	comment := r.commentsByID[commentID]
-	return comment, nil
+	if comment, ok := r.commentsByID[commentID]; !ok {
+		return nil, errors.Wrap(model.ErrCommentNotFound, "database error: comment not found (method GetCommentByiD, table comments)")
+	} else {
+		return comment, nil
+	}
 }

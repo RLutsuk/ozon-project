@@ -7,6 +7,7 @@ import (
 	commentrep "github.com/RLutsuk/ozon-project/internal/comment/repository"
 	postrep "github.com/RLutsuk/ozon-project/internal/post/repository"
 	userrep "github.com/RLutsuk/ozon-project/internal/user/repository"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -37,9 +38,16 @@ func (uc *useCase) CreatePost(ctx context.Context, inputPost model.CreatePostInp
 	newpost.Allowcomments = inputPost.AllowComments
 	newpost.Body = inputPost.Body
 	newpost.UserID = inputPost.UserID
+	_, err := uc.userRepository.GetUserByID(ctx, inputPost.UserID)
+	if err != nil {
+		return nil, errors.Wrap(err, "uc error: failed to get user (method CreatePost)")
+	}
+
 	post, err := uc.postRepository.CreatePost(ctx, &newpost)
 	if err == nil {
 		logrus.Info("Post succesfully created")
+	} else {
+		return nil, errors.Wrap(err, "uc error: failed to create post (method CreatePost)")
 	}
 	return post, err
 }
@@ -63,6 +71,9 @@ func (uc *useCase) GetPost(ctx context.Context, id string, limit, offset *int32)
 	}
 
 	rootComments, childcomments, err := uc.commentRepository.GetComments(ctx, post.ID, limitInt, offsetInt)
+	if err != nil {
+		return nil, errors.Wrap(err, "uc error: failed to get comments to post (method GetPost)")
+	}
 	if len(childcomments) == 0 {
 		post.Comments = rootComments
 		return post, nil
@@ -90,21 +101,24 @@ func (uc *useCase) GetPost(ctx context.Context, id string, limit, offset *int32)
 	}
 
 	post.Comments = rootComments
-	if err == nil {
-		logrus.Info("Post succesfully found")
-	}
+	logrus.Info("Post succesfully found")
 	return post, err
 }
 
 func (uc *useCase) GetAllPosts(ctx context.Context) ([]*model.Post, error) {
 	posts, err := uc.postRepository.GetAllPosts(ctx)
-	// if err == nil {
-	// 	logrus.Info("Posts succesfully found")
-	// }
-	return posts, err
+	if err == nil {
+		logrus.Info("Posts succesfully found")
+	} else {
+		return nil, errors.Wrap(err, "uc error: failed to get all posts (method GetAllPosts)")
+	}
+	return posts, nil
 }
 
 func (uc *useCase) GetUserByID(ctx context.Context, obj *model.Post) (*model.User, error) {
 	user, err := uc.userRepository.GetUserByID(ctx, obj.UserID)
-	return user, err
+	if err != nil {
+		return nil, errors.Wrap(err, "uc error: failed to get user by id (method GetUserByID)")
+	}
+	return user, nil
 }

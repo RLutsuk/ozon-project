@@ -23,14 +23,13 @@ type Comment {
   user: User!
   post: Post!
   created: Time!
-  parent: Comment
-  level: Int
+  level: Int!
   replies: [Comment]
 }
 
 type Query {  
-  getpost(id: ID!, limit: Int, offset: Int): Post
-  getposts: [Post]
+  getpost(id: ID!, limit: Int, offset: Int): Post!
+  getposts: [Post!]
 }
 
 input CreatePostInput {

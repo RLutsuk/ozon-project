@@ -22,7 +22,10 @@ func (dbUser *dataBase) GetUserByID(ctx context.Context, id string) (*model.User
 	var user model.User
 	tx := dbUser.db.Table("users").Where("id = ?", id).Take(&user)
 	if tx.Error != nil {
-		return &user, errors.Wrap(tx.Error, "database error (table users)")
+		return nil, errors.Wrap(tx.Error, "database error: internal (method GetUserByID, table users)")
+	}
+	if tx.RowsAffected == 0 {
+		return nil, errors.Wrap(model.ErrUserNotFound, "database error: user not found (method GetUserByID, table users)")
 	}
 	return &user, nil
 }
