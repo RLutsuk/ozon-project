@@ -46,7 +46,7 @@ func (dbComment *dataBase) GetComments(ctx context.Context, postId string, limit
 	return rootcomments, childcomments, nil
 }
 
-func (dbComment *dataBase) GetCommentByiD(ctx context.Context, commentID string) (*model.Comment, error) {
+func (dbComment *dataBase) GetCommentByID(ctx context.Context, commentID string) (*model.Comment, error) {
 	comment := model.Comment{}
 	tx := dbComment.db.Table("comments").Where("id = ?", commentID).Take(&comment)
 	if tx.RowsAffected == 0 {

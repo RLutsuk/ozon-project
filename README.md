@@ -21,3 +21,8 @@
 `$ docker run -d -p 8080:8080 -e STORAGE_TYPE=inmem --name ozon-project_container ozon-project`
 
  По умолчанию в качестве хранилища используется БД.
+
+
+ **Использование**
+
+После запуска можно перейти на PlayGround: http://localhost:8080/ и выполнить запросы. Для этого в БД и inmemory хранлище были добавлены тестовые данные.

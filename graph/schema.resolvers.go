@@ -7,8 +7,6 @@ package graph
 import (
 	"context"
 	"errors"
-	"fmt"
-	"time"
 
 	"github.com/RLutsuk/ozon-project/graph/model"
 	userloaders "github.com/RLutsuk/ozon-project/internal/user/dataloader"
@@ -86,7 +84,6 @@ func (r *mutationResolver) CreateComment(ctx context.Context, input model.Create
 			return nil, model.ErrInternalServer
 		}
 	}
-
 	return comment, nil
 }
 
@@ -150,44 +147,12 @@ func (r *queryResolver) Getposts(ctx context.Context) ([]*model.Post, error) {
 
 // NewCommentToPost is the resolver for the newCommentToPost field.
 func (r *subscriptionResolver) NewCommentToPost(ctx context.Context, postID string) (<-chan *model.Comment, error) {
-	// id := randx.String(8)
-
 	// commentEvent := make(chan *model.Comment, 1)
 	// go func() {
 	// 	<-ctx.Done()
 	// }()
-	// videoPublishedChannel[id] = commentEvent
 	// return commentEvent, nil
-
-	ch := make(chan *model.Comment)
-
-	// You can (and probably should) handle your channels in a central place outside of `schema.resolvers.go`.
-	// For this example we'll simply use a Goroutine with a simple loop.
-	go func() {
-		// Handle deregistration of the channel here. Note the `defer`
-		defer close(ch)
-
-		for {
-			time.Sleep(1 * time.Second)
-			fmt.Println("Tick")
-
-			// Prepare your object.
-			t := &model.Comment{
-				ID: time.Now().String(),
-			}
-
-			select {
-			case <-ctx.Done():
-				fmt.Println("Subscription Closed")
-				return
-
-			case ch <- t:
-			}
-		}
-	}()
-
-	// We return the channel and no error.
-	return ch, nil
+	return nil, nil
 }
 
 // Comment returns CommentResolver implementation.

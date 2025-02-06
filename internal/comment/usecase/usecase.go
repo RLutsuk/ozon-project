@@ -45,7 +45,7 @@ func (uc *useCase) CreateComment(ctx context.Context, input model.CreateCommentI
 	}
 	if input.ParentID != "" {
 		newcomment.ParentId = input.ParentID
-		parentComment, err := uc.commentRepository.GetCommentByiD(ctx, input.ParentID)
+		parentComment, err := uc.commentRepository.GetCommentByID(ctx, input.ParentID)
 		if err != nil {
 			return nil, errors.Wrap(err, "uc error: failed to get comment (method CreateComment)")
 		}

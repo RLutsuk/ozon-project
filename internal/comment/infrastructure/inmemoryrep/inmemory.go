@@ -93,7 +93,7 @@ func (r *inmemoryStore) GetComments(ctx context.Context, postId string, limit, o
 	return parentcomments[start:end], childcomments, nil
 }
 
-func (r *inmemoryStore) GetCommentByiD(ctx context.Context, commentID string) (*model.Comment, error) {
+func (r *inmemoryStore) GetCommentByID(ctx context.Context, commentID string) (*model.Comment, error) {
 	if comment, ok := r.commentsByID[commentID]; !ok {
 		return nil, errors.Wrap(model.ErrCommentNotFound, "database error: comment not found (method GetCommentByiD, table comments)")
 	} else {
