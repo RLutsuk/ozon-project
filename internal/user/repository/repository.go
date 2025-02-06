@@ -8,4 +8,5 @@ import (
 
 type RepositoryI interface {
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
+	GetUsers(ctx context.Context, id []string) ([]*model.User, error)
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/RLutsuk/ozon-project/graph/model"
 	commentrep "github.com/RLutsuk/ozon-project/internal/comment/repository"
+	postrep "github.com/RLutsuk/ozon-project/internal/post/repository"
 	userrep "github.com/RLutsuk/ozon-project/internal/user/repository"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -19,12 +20,14 @@ type UseCaseI interface {
 type useCase struct {
 	commentRepository commentrep.RepositoryI
 	userRepository    userrep.RepositoryI
+	postRepository    postrep.RepositoryI
 }
 
-func New(commentRepository commentrep.RepositoryI, userRepository userrep.RepositoryI) UseCaseI {
+func New(commentRepository commentrep.RepositoryI, userRepository userrep.RepositoryI, postRepository postrep.RepositoryI) UseCaseI {
 	return &useCase{
 		commentRepository: commentRepository,
 		userRepository:    userRepository,
+		postRepository:    postRepository,
 	}
 }
 
@@ -37,8 +40,9 @@ func (uc *useCase) CreateComment(ctx context.Context, input model.CreateCommentI
 
 	if len(lenComment) > 2000 {
 		return nil, errors.Wrap(model.ErrBadData, "uc error: comment is too big (method CreateComment)")
+	} else if len(lenComment) == 0 {
+		return nil, errors.Wrap(model.ErrBadData, "uc error: body cannot be empty (method CreateComment)")
 	}
-
 	if input.ParentID != "" {
 		newcomment.ParentId = input.ParentID
 		parentComment, err := uc.commentRepository.GetCommentByiD(ctx, input.ParentID)
@@ -51,6 +55,20 @@ func (uc *useCase) CreateComment(ctx context.Context, input model.CreateCommentI
 		} else {
 			newcomment.RootID = parentComment.RootID
 		}
+	}
+
+	_, err := uc.userRepository.GetUserByID(ctx, input.UserID)
+	if err != nil {
+		return nil, errors.Wrap(err, "uc error: failed to get user (method CreateComment)")
+	}
+
+	post, err := uc.postRepository.GetPostByID(ctx, input.PostID)
+	if err != nil {
+		return nil, errors.Wrap(err, "uc error: failed to get post (method CreateComment)")
+	}
+
+	if !post.Allowcomments {
+		return nil, errors.Wrap(model.ErrСommentsProhibited, "uc error: cannot comment on this post (method CreateComment)")
 	}
 
 	comment, err := uc.commentRepository.CreateComment(ctx, &newcomment)
@@ -67,6 +85,7 @@ func (uc *useCase) GetUserByID(ctx context.Context, obj *model.Comment) (*model.
 	if err != nil {
 		return nil, errors.Wrap(err, "uc error: failed to get user by id (method GetUserByID)")
 	}
+	logrus.Info("User succesfully found for commentuc")
 	return user, nil
 }
 

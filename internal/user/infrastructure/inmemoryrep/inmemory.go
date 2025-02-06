@@ -51,3 +51,13 @@ func (r *inmemoryStore) GetUserByID(ctx context.Context, id string) (*model.User
 		return user, nil
 	}
 }
+
+func (r *inmemoryStore) GetUsers(ctx context.Context, id []string) ([]*model.User, error) {
+	var users []*model.User
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, idUser := range id {
+		users = append(users, r.users[idUser])
+	}
+	return users, nil
+}

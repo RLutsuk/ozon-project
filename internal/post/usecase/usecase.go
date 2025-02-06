@@ -38,6 +38,9 @@ func (uc *useCase) CreatePost(ctx context.Context, inputPost model.CreatePostInp
 	newpost.Allowcomments = inputPost.AllowComments
 	newpost.Body = inputPost.Body
 	newpost.UserID = inputPost.UserID
+	if len(newpost.Body) == 0 || len(newpost.Title) == 0 {
+		return nil, errors.Wrap(model.ErrBadData, "uc error: title or body cannot be empty (method CreatePost)")
+	}
 	_, err := uc.userRepository.GetUserByID(ctx, inputPost.UserID)
 	if err != nil {
 		return nil, errors.Wrap(err, "uc error: failed to get user (method CreatePost)")
@@ -53,7 +56,10 @@ func (uc *useCase) CreatePost(ctx context.Context, inputPost model.CreatePostInp
 }
 
 func (uc *useCase) GetPost(ctx context.Context, id string, limit, offset *int32) (*model.Post, error) {
-	post, _ := uc.postRepository.GetPostByID(ctx, id)
+	post, err := uc.postRepository.GetPostByID(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "uc error: failed to get post (method GetPost)")
+	}
 	limitInt := 0
 	offsetInt := 0
 	if limit == nil {
@@ -108,7 +114,7 @@ func (uc *useCase) GetPost(ctx context.Context, id string, limit, offset *int32)
 func (uc *useCase) GetAllPosts(ctx context.Context) ([]*model.Post, error) {
 	posts, err := uc.postRepository.GetAllPosts(ctx)
 	if err == nil {
-		logrus.Info("Posts succesfully found")
+		logrus.Info("All posts succesfully found")
 	} else {
 		return nil, errors.Wrap(err, "uc error: failed to get all posts (method GetAllPosts)")
 	}
@@ -120,5 +126,6 @@ func (uc *useCase) GetUserByID(ctx context.Context, obj *model.Post) (*model.Use
 	if err != nil {
 		return nil, errors.Wrap(err, "uc error: failed to get user by id (method GetUserByID)")
 	}
+	logrus.Info("User succesfully found for postuc")
 	return user, nil
 }

@@ -28,8 +28,8 @@ type Comment {
 }
 
 type Query {  
-  getpost(id: ID!, limit: Int, offset: Int): Post!
-  getposts: [Post!]
+  getpost(id: ID!, limit: Int, offset: Int): Post
+  getposts: [Post]
 }
 
 input CreatePostInput {
@@ -49,6 +49,10 @@ input CreateCommentInput {
 type Mutation {
   createPost(input: CreatePostInput!): Post!
   createComment(input: CreateCommentInput!): Comment!
+}
+
+type Subscription {
+    newCommentToPost(postId: ID!): Comment!
 }
 
 scalar Time

@@ -22,6 +22,7 @@ import (
 	postrep "github.com/RLutsuk/ozon-project/internal/post/repository"
 	postresolver "github.com/RLutsuk/ozon-project/internal/post/resolver"
 	postusecase "github.com/RLutsuk/ozon-project/internal/post/usecase"
+	userloaders "github.com/RLutsuk/ozon-project/internal/user/dataloader"
 	userrepinmem "github.com/RLutsuk/ozon-project/internal/user/infrastructure/inmemoryrep"
 	userrepdb "github.com/RLutsuk/ozon-project/internal/user/infrastructure/postgresrep"
 	userrep "github.com/RLutsuk/ozon-project/internal/user/repository"
@@ -80,7 +81,7 @@ func main() {
 	}
 
 	postUC := postusecase.New(postRep, userRep, commentRep)
-	commentUC := commentusecase.New(commentRep, userRep)
+	commentUC := commentusecase.New(commentRep, userRep, postRep)
 	postResolver := postresolver.New(postUC)
 	commentResolver := commentresolver.New(commentUC)
 
@@ -91,6 +92,7 @@ func main() {
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
+	srv.AddTransport(transport.Websocket{})
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
@@ -102,8 +104,10 @@ func main() {
 		Cache: lru.New[string](100),
 	})
 
+	// srv = userloaders.Middleware(userRep, srv)
+
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	http.Handle("/query", userloaders.Middleware(userRep, srv))
 
 	if serverPort == "" {
 		serverPort = defaultPort
